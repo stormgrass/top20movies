@@ -1,0 +1,123 @@
+var getJSON = function(url) {
+  return new Promise(function(resolve, reject) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('get', url, true);
+    xhr.responseType = 'json';
+    xhr.onload = function() {
+      var status = xhr.status;
+      if (status == 200) {
+        resolve(xhr.response);
+      } else {
+        reject(status);
+      }
+    };
+    xhr.send();
+  });
+};
+
+const d = new Date();
+let n = d.getFullYear();
+let backdrop = '';
+class App extends React.Component {
+
+  constructor() {
+    super()
+    //declare empty initial state until API call has finished
+    this.state = {
+      data: []
+    }
+  }
+
+  componentDidMount() {
+    //call the API for the userlist
+    $.getJSON('http://api.themoviedb.org/3/discover/movie?page=1&primary_release_year=' + n + '&sort_by=popularity.desc&api_key=d2e4954257fdd51820ae05f9c644a8f0').then(function(json) {
+
+      this.setState({data: json.results})
+    }.bind(this));
+
+
+
+  }
+  //declare these variables after state has changed by calling the API
+  //in order to initialize the list.js sorting library
+  componentDidUpdate() {
+    let options = { valueNames: [ 'monthly', 'total']};
+    let userList = new List(this.refs.users, options);
+    backdrop = 'http://image.tmdb.org/t/p/original/' + this.state.data[0].backdrop_path;
+    console.log(backdrop);
+    $('body').css('background', 'url(' + backdrop + ') no-repeat center center fixed');
+    $('body').css('background-size', 'cover');
+
+  }
+
+  render() {
+    //create the row via the constant
+    let rows = this.state.data.map(movie => {
+      return <MovieRow key={movie.title} data={movie} />
+    })
+
+
+
+
+
+    //render the table
+    return <div ref="users"><div className="container"><div className="headerbox"><h1><form  onSubmit={this._changeYear.bind(this)}><label>20 most popular films of </label><br /><input type="text" placeholder={n} ref={c => this._year = c} /></form></h1>
+      <h3>Pick a year to see its 20 most popular films*</h3>
+      <p>*According to the users of themoviedb.org</p>
+      </div>
+
+
+      <div className="table-responsive">
+      <table className="table">
+        <th>Poster</th>
+        <th>Name</th>
+        <th>Summary</th>
+        <th><button className="sort" data-sort="monthly">Rating</button></th>
+        <th><button className="sort" data-sort="total">Release</button></th>
+      <tbody className="list">
+        {rows}
+        </tbody>
+      </table>
+      </div>
+      <footer><small>Made by <a target="_blank" href="http://hemmer.tv">Richard</a>, data graciously provided by <a target="_blank" href="http://themoviedb.org">The Movie Database</a></small></footer>
+      </div>
+
+
+</div>
+
+  }
+
+_changeYear(event) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  var l = this._year.value;
+  if (l >= 1887 && l <= n) {
+  getJSON('http://api.themoviedb.org/3/discover/movie?page=1&primary_release_year=' + l + '&sort_by=popularity.desc&api_key=d2e4954257fdd51820ae05f9c644a8f0').then(function(json) {
+      this.setState({data: json.results})
+    }.bind(this));
+}
+  $(function () {
+    $('input').blur();
+});
+}
+}
+
+
+
+//create a row for each user
+const MovieRow = (props) => {
+  return <tr className="therow">
+    <td className="poster"><img className="img-responsive" src={'http://image.tmdb.org/t/p/w500' + props.data.poster_path} /></td>
+    <td><a target="_blank" href={'https://www.themoviedb.org/movie/' + props.data.id}><em><h4>{props.data.title}</h4></em></a></td>
+    <td><p>{props.data.overview}</p></td>
+    <td className="monthly numbers">{props.data.vote_average}</td>
+    <td className="total numbers">{props.data.release_date}</td>
+    </tr>
+
+}
+
+
+
+
+React.render(<App />, document.getElementById('app'));

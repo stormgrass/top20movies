@@ -2,5 +2,5 @@ Built with React and a smidgen of jQuery, this app displays the most popular fil
 
 The API used is from themoviedb.org.
 
-A working version can be found at https://hemmer.tv/movies
+A working version can be found at https://twentyfilms.com
 
